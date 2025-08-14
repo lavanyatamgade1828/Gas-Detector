@@ -1,0 +1,64 @@
+ORG 0000H
+JMP START
+ORG 0100H
+START:
+MOV P3, #0FFH ; Initialize Port 3 with 0xFF
+MOV R3, #23 ; Initialize R3 with 23
+Here1:
+MOV R2, #255 ; Initialize R2 with 255
+Here2:
+MOV R1, #255 ; Initialize R1 with 255
+Here:
+DJNZ R1, Here ; Decrement R1 and jump if not zero
+DJNZ R2, Here2 ; Decrement R2 and jump if not zero
+DJNZ R3, Here1 ; Decrement R3 and jump if not zero
+LOOP:
+MOV A, P3 ; Move the value of Port 3 to accumulator A
+CJNE A, #0FFH, LOOP ; Compare A with 0xFE and jump to LOOP if not equal
+CJNE A, #0FEH, DETECT ; Compare A with 0xFF and jump to DETECT if not equal
+DETECT:
+CLR P3.1 ; Clear bit P3.1
+SETB P0.0 ; Set bit P0.0
+Mov A, #38H ; Load A with 38H
+ACALL com ; Call subroutine com
+MOV A, #0EH ; Load A with 0EH
+ACALL com ; Call subroutine com
+MOV A, #80H ; Load A with 80H
+ACALL com ; Call subroutine com
+MOV A, #01H ; Load A with 01H
+ACALL com ; Call subroutine com
+MOV DPTR, #STR ; Load DPTR with the address of the string STR
+REV:
+MOV A, #00H ; Load A with 00H
+MOVC A, @A+DPTR ; Move code from the code memory to A using DPTR as a pointer
+JZ FINISH ; Jump to FINISH if A is zero
+ACALL L_D ; Call subroutine L_D
+INC DPTR ; Increment DPTR
+SJMP REV ; Jump to REV
+FINISH:
+SJMP FINISH ; Jump to FINISH
+com:
+ACALL DEL_ROUTINE ; Call subroutine DEL_ROUTINE
+MOV P1, A ; Move the value of A to Port 1
+CLR P2.1 ; Clear bit P2.1
+SETB P2.2 ; Set bit P2.2
+CLR P2.2 ; Clear bit P2.2
+RET ; Return from subroutine
+L_D:
+ACALL DEL_ROUTINE ; Call subroutine DEL_ROUTINE
+MOV P1, A ; Move the value of A to Port 1
+SETB P2.1 ; Set bit P2.1
+SETB P2.2 ; Set bit P2.2
+CLR P2.2 ; Clear bit P2.2
+RET ; Return from subroutine
+DEL_ROUTINE:
+MOV R0, #0FFH ; Initialize R0 with 0xFF
+L1:
+MOV R1, #0FFH ; Initialize R1 with 0xFF
+L2:
+DJNZ R1, L2 ; Decrement R1 and jump if not zero
+DJNZ R0, L1 ; Decrement R0 and jump if not zero
+RET ; Return from subroutine
+STR:
+DB 'Warning Warning', 0 ; Define a string "Warning Warning"
+END
